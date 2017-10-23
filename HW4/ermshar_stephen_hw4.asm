@@ -5,8 +5,8 @@
 # version history: https://github.com/sermshar/cptr280
 
 .data
-    array_1:    .space  12                  # allocate 3 words (12 bytes) for array in (f)
     hello_w:    .asciiz "Hello World"
+    array_1:    .space  12                  # allocate 3 words (12 bytes) for array in (f)
 
 .text
 .globl main
@@ -41,7 +41,7 @@
         move    $t0,    $v0
 
         # f) a0 = &array;
-        la      $a0,    array_1             # load base address of array1 into $t0
+        la      $a0,    array_1             # load base address of array1 into $a0
 
         # g) t8 = mem(a0);
         lw      $t8,    0($a0)
