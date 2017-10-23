@@ -2,6 +2,7 @@
 # CPTR 280
 # HW 4
 # 2017 OCT 18
+# version history: https://github.com/sermshar/cptr280
 
 .data
     array_1:    .space  12                  # allocate 3 words (12 bytes) for array in (f)
