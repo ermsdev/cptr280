@@ -3,6 +3,10 @@
 # HW 4
 # 2017 OCT 18
 
+.data
+    array_1:    .space  12                  # allocate 3 words (12 bytes) for array in (f)
+    hello_w:    .asciiz "Hello World"
+
 .text
 .globl main
     main:
@@ -18,7 +22,7 @@
         li      $t2,    105
         li      $t0,    5
         sub     $s3,    $s1,    $t0
-        div     $t2,    $s3                 # how do div and mflo work?
+        div     $t2,    $s3
         mflo    $s4
 
         # c) sp=sp–16;
@@ -36,13 +40,14 @@
         move    $t0,    $v0
 
         # f) a0 = &array;
-        la      $a0,    array_1             # load base address of array1 into $t0, not sure if that's what this is asking for
+        la      $a0,    array_1             # load base address of array1 into $t0
 
         # g) t8 = mem(a0);
-                                            # not sure what this is asking for
+        lw      $t8,    0($a0)
 
         # h) mem(a0 + 16) = 32768;
-                                            # not sure what this is asking for
+        li      $s0,    32768
+        sw      $s0,    16($a0)
 
         # i) Cout << “Hello World”;
         la      $a0,    hello_w
@@ -50,8 +55,8 @@
         syscall
 
         # j) t0 = 2147483647 – 2147483648;
-        li      $t0,    2147483647          # highest integer that can be held in a single register
-        li      $t1,    -2147483648         # lowest integer that can be held in a single register
+        li      $t0,    2147483647          # must use li, because numbers this big don't fit in the addi command
+        li      $t1,    -2147483648
         add     $t0,    $t0,    $t1
 
         # k) s0=-1*s0;
@@ -71,7 +76,3 @@
         # exit program
         li      $v0     10
         syscall
-
-.data
-    array_1:    .space  12                  # allocate 3 words (12 bytes) for array in (f)
-    hello_w:    .asciiz "Hello World"
