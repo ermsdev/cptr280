@@ -1,0 +1,10 @@
+## Program adds 10 and 11
+	
+        .text
+        .globl  main
+	
+main:
+        ori     $8, $0, 0xA       # load "10" into register 8
+        ori     $9, $0, 0xB       # load "11" into register 9
+        add     $10,$8, $9        # add registers 8 and 9, put result in register 10
+
