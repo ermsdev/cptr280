@@ -5,15 +5,14 @@
 # version history: https://github.com/sermshar/cptr280
 
 .data
+    data:       .space  16
 
 .text
 .globl main
     main:
 # PART 1
 # b) If(t0<0)thent7=0–t0elset7=t0;
-        bltz    $t0,    less_0          # branch_on_less_than_zero to less_0
-        j       main_2                  # else jump to main_2
-    less_0:
+        bgez    $t0,    main_2          # branch_on_greater_than_or_zero to main_2
         sub     $t7,    $0,     $t0     # $t7 = 0 - $t0
     main_2:
         move    $t7,    $t0
@@ -22,6 +21,7 @@
     loop_0:
         add     $s1,    $s1,    $t0
         addi    $t2,    $t2,    4
+        la      $t2,    data
         lw      $t0,    0($t2)
         bne     $t0,    $0,     loop_0
 
@@ -31,3 +31,6 @@
         add     $v0,    $v0,    $t1
         addi    $t1,    $t1,    -1
         bgez    $t1,    loop_f
+
+        li      $v0,    10              # syscall_10 = end_program
+        syscall
