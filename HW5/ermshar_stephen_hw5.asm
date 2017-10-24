@@ -12,8 +12,7 @@
     in_t:       .space  16
     out_p:      .ascii  "p: "
     in_p:       .space  16
-    out_v:      .ascii  "v: "
-    in_v:       .space  16
+    out_v:      .ascii  "V = "
     data:       .space  16
 
 .text
@@ -72,12 +71,12 @@
         div     $t0,    $s2                 # $t0 / $s1
         mflo    $t0                         # integer quotient to $t0
 
-        li      $t1,    8314
+        li      $t1,    8314                # calculating R
         li      $t2,    1000
         div     $t1,    $t2
-        mflo    $t3
+        mflo    $t3                         # not using remainder
 
-        mult    $t0,    $t3
+        mult    $t0,    $t3                 
         mflo    $s4
 
         la      $a0,    out_v
@@ -87,9 +86,16 @@
         move    $a0,    $s4
         li      $v0,    1
         syscall
-        
-        
 
 # END PROGRAM
-        li      $v0,    10              # syscall_10 = end_program
+        li      $v0,    10              	# syscall_10 = end_program
         syscall
+
+
+# REPORT
+
+# I initially had memory issues with part 1.c, because I hadn't allocated space for the 
+# array, but it was a quick fix. Calculating, the ideal gas law returned some incorrect 
+# results, though they were near results from a calculator, so I suspect this was because
+# I was using integer devision and multiplication only. (for n=50, t=50, p=80, my 
+# calculator gave 259.8125, but the program returned 248)
