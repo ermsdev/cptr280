@@ -21,8 +21,10 @@
 # PART 1
 # b) If(t0<0)thent7=0–t0elset7=t0;
     main_1:
-        bgez    $t0,    else_1          # branch_on_greater_than_or_zero to main_2
+        bgez    $t0,    else_1          # branch_on_greater_than_or_zero to else_1
         sub     $t7,    $0,     $t0     # $t7 = 0 - $t0
+        j       loop_0                  # jump over else
+        
     else_1:
         move    $t7,    $t0
 
