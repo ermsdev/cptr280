@@ -6,11 +6,11 @@
 
 .data
     in_sz:      .word   16
-    out_n:      .ascii  "n: "
+    out_n:      .ascii  "n:  "
     in_n:       .space  16
-    out_t:      .ascii  "t: "
+    out_t:      .ascii  "t:  "
     in_t:       .space  16
-    out_p:      .ascii  "p: "
+    out_p:      .ascii  "p:  "
     in_p:       .space  16
     out_v:      .ascii  "V = "
     data:       .space  16
