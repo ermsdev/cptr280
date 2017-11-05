@@ -7,8 +7,7 @@
 # • Initialize;
 .data
     prompt2:    .asciiz     "\nEnter a positive integer to test: "
-    bye:        .asciiz     "Bye Felicia!"
-    test:       .asciiz     "Anybody there?"
+    bye:        .asciiz     "End Program"
     ans_p:      .asciiz     " is prime."
     ans_np:     .asciiz     " is not prime, and is divisible by "
 
@@ -18,17 +17,17 @@
 # • Prompt the user to enter an integer to test;
     ask_prime:
         la      $a0,    prompt2
-        li      $v0,    4               # syscall_4: print string
+        li      $v0,    4                           # syscall_4: print string
         syscall
 
-        li      $v0,    5               # syscall_5: read int
+        li      $v0,    5                           # syscall_5: read int
         syscall
 
-        beq     $v0,    $0,     end     # if 0, terminate
+        beq     $v0,    $0,     end                 # if 0, terminate
         nop
 
-        add     $s0,    $0,     $v0     # move $v0 to $s0 (for safe keeping)
-        add     $a0,    $0,     $s0     # move $s0 to $a0 (as argument for chk_prime)
+        add     $s0,    $0,     $v0                 # move $v0 to $s0 (for safe keeping)
+        add     $a0,    $0,     $s0                 # move $s0 to $a0 (as argument for chk_prime)
 
         jal     chk_prime
         nop
@@ -43,7 +42,7 @@
         # $t2 will hold the top limit of numbers to check divisibilty against (ie. n/2)
         # $t3 checks to see if the input is automaticaly prime (ie. less than 4) then is used to check to see if we've reached $t2
 
-        bltz    $a0,    ask_prime
+        bltz    $a0,    ask_prime                   # make sure input isn't negative
         nop
 
         li      $t1,    4
@@ -53,11 +52,11 @@
 
         # by 2
         li      $t0,    2
-        div     $s0,    $t0
+        div     $s0,    $t0                         # if mod returns 0 it isn't prime
         mfhi    $t1
         beq     $t1,    $0,     not_prime
 
-        # largest number to check divisbility by
+        # largest number to check 3's divisbility by
         mflo    $t2
 
         # by 3's
@@ -70,48 +69,45 @@
         nop
 
         addi    $t0,    $t0,    2
-        sub     $t3,    $t0,    $t2        # becuase branch on greater than register isn't a thing...
-        bgez    $t3,    is_prime           # if you've looped enough times to make this line happy, you deserve your prime-y-ness
+        sub     $t3,    $t0,    $t2                 # becuase branch on greater than register isn't a thing...
+        bgez    $t3,    is_prime                    # if you've looped enough times to make this line happy, you deserve your prime-y-ness
 
-        j       odd_chk                     # do it again...
+        j       odd_chk                             # do it again...
         nop
 
     is_prime:
 
-        li      $v0,    1                   # syscall_1: print int, the original input should still be in $a0
+        li      $v0,    1                           # syscall_1: print int, the original input should still be in $a0
         syscall
 
         la      $a0,    ans_p
-        li      $v0,    4                   # syscall_4: print string
+        li      $v0,    4                           # syscall_4: print string
         syscall
 
-        jr      $ra                         # now go home...
+        jr      $ra                                 # now go home...
         nop
 
     not_prime:
 
-        li      $v0,    1                   # syscall_1: print int, the original input should still be in $a0
+        li      $v0,    1                           # syscall_1: print int, the original input should still be in $a0
         syscall
 
         la      $a0,    ans_np
-        li      $v0,    4                   # syscall_4: print string
+        li      $v0,    4                           # syscall_4: print string
         syscall
 
         add     $a0,    $0,     $t0
         li      $v0,    1
         syscall
 
-        jr      $ra                         # get thee hence back to thy main!
+        jr      $ra                                 # get thee hence back to thy main!
         nop
-
-
-# • Loop until the user enters the integer 0 (zero);
 
 # • Print a goodbye message;
 # • Terminate.
     end:
         la      $a0,    bye
-        li      $v0,    4                   # syscall_4: print string
+        li      $v0,    4                           # syscall_4: print string
         syscall
 
         li      $v0,    10
