@@ -16,38 +16,74 @@
 
 .data
 prompt:		.asciiz		"Enter 1 to begin computation, 0 to quit: "
+prompt2:	.asciiz		"sum of proper devisors of 284: "
+space:		.asciiz		", "
 
 .text
 main:
-
-	la		$a0,		prompt
-	li		$v0,		4				# syscall_4: print string
+	# t0 --> artificial immediate (for instructions that don't support immediate values)
+	la		$a0,	prompt
+	li		$v0,	4				# syscall_4: print string
 	syscall
 
-	li		$a3,	10
+	li		$v0,	5				# syscall_5: read int
+	syscall
 
-	sum_div:
-		# $t9 --> the number we're summing devisors from
-		# $t8 --> the number we're checking for devisorship (initialy for deviding input by 2)
-		move	$t9,	$a3
+	beq		$v0,	$0,		end		# end if user enters 0
+	li		$t0,	1				# $t1 = 1
+	bne		$v0,	$t0,	main	# start over if user doesn't enter a 1 (or a 0 as a result of last instruction)
 
-		# devide input number by 2 and use it as the start of the list of numbers to check devisorship
-		li		$t8,	2
-		div		$t9,	$t8				# $t9 / $t0
-		mflo	$t8
-		addi	$t8,	$t8,	1		# $t8 = $t8 + 1
-		
-		
-		
+	la		$a0,		prompt2
+	li		$v0,		4			# syscall_4: print string
+	syscall
 
-		check_div:
-			div		$t0, 	$t1			# $t0 / $t1
-			mfhi	$t8					# will be 0 if division is perfect
+	li		$a3,	284
 
-			
-		bne		$t0, $t1, target	# if $t0 != $t1 then target
 
-		li
+#--------------------------------------------------------------------
+# sum_divs subroutine: input $a3, sums all proper devisors of input
+# BEGIN
+#--------------------------------------------------------------------
+sum_divs:
+	# t9: input to find devisors of
+	# t8: potential devisor of t9
+	# t7: sum of devisors
+	move 	$t9,	$a3				# t9 <-- a3
+	li		$t8,	1
+	li		$t7,	1
 
-		addi	$sp, $sp, 4		# $sp = $sp - 4
-		sw		$t1, 0($sp)		# store $tw at stack pointer
+check_sum_divs:
+	addi	$t8, $t8, 1			# 8 = $t1 + 0
+	div		$t9, $t8			# t9 / t8
+	mfhi	$t3					# $t3 = 9 mod $t1 
+	mflo	$t2					# $t2 = floor(9 / $t1) 
+	bne		$t3, $0, check_sum_divs
+	nop
+	blt		$t2, $t8, sum_out	# if $t2 < $t8 then check_sum_divs
+	nop
+	add		$t7, $t7, $t8		# $t0 = $t1 + $t2
+	beq		$t2, $t8, check_sum_divs	# if 2 == $t1 then target
+	nop
+	add		$t7, $t7, $t2
+	j		check_sum_divs				# jump to target
+	nop
+
+sum_out:
+	move	$v1,	$t7
+	jr		$ra				# jump to ra, allows register jumps from branch instructions
+
+#--------------------------------------------------------------------
+# END
+# sum_divs subroutine: input $a3, sums all proper devisors of input
+#--------------------------------------------------------------------
+
+
+
+
+end:
+	move	$a0,	$t7
+	li		$v0,	1				# syscall_4: print string
+	syscall
+
+	li		$v0,	10				# syscall_10: terminate program
+	syscall
