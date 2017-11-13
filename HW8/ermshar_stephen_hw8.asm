@@ -28,16 +28,16 @@ main:
 # welcome message: prompts beginning of computation
 # BEGIN
 #--------------------------------------------------------------------
-	# la		$a0,	prompt
-	# li		$v0,	4				# syscall_4: print string
-	# syscall
+	la		$a0,	prompt
+	li		$v0,	4				# syscall_4: print string
+	syscall
 
-	# li		$v0,	5				# syscall_5: read int
-	# syscall
+	li		$v0,	5				# syscall_5: read int
+	syscall
 
-	# beq		$v0,	$0,		end		# end if user enters 0
-	# li		$t0,	1
-	# bne		$v0,	$t0,	main	# start over if user doesn't enter a 1 (or a 0 as a result of last instruction)
+	beq		$v0,	$0,		end		# end if user enters 0
+	li		$t0,	1
+	bne		$v0,	$t0,	main	# start over if user doesn't enter a 1 (or a 0 as a result of last instruction)
 #--------------------------------------------------------------------
 # END
 # welcome message: prompts beginning of computation
@@ -69,7 +69,9 @@ list_nums:
 	move	$t3,	$v1		# put s(n) in t2 and print
 
 	bne		$t1, $t3, list_nums	# if $t0 != $t1 then target
+	nop
 	beq		$t1, $t2, list_nums
+	nop
 
 	move	$a0,	$t1		# print n
 	li		$v0,	1
