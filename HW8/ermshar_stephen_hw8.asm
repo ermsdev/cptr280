@@ -18,6 +18,7 @@
 prompt:		.asciiz		"Enter 1 to begin computation, 0 to quit: "
 space:		.asciiz		" "
 nl:			.asciiz		"\n"
+amicable:	.asciiz		" AMICABLE PAIR FOUND"
 
 .text
 main:
@@ -35,84 +36,76 @@ main:
 	# syscall
 
 	# beq		$v0,	$0,		end		# end if user enters 0
-	# li		$t0,	1				# $t1 = 1
+	# li		$t0,	1
 	# bne		$v0,	$t0,	main	# start over if user doesn't enter a 1 (or a 0 as a result of last instruction)
 #--------------------------------------------------------------------
 # END
 # welcome message: prompts beginning of computation
 #--------------------------------------------------------------------
 
-# 	li		$t1,	219
-
-# search_n:
-# 	addi	$t1,	$t1,	1
-# 	move 	$a3,	$t1
-# 	jal		sum_divs
-# 	nop
-# 	move 	$t2,	$v1
-# 	move	$a3,	$t2
-# 	jal		sum_divs
-# 	nop
-# 	move 	$t3,	$v1
-# 	beq		$t1, $t3, print_pair
-# 	nop
-# 	j		search_n				# jump to search_n
-# 	nop
+# t1: n
+# t2: s(n)
 
 
-# print_pair:
-# 	move	$a0,	$t1
-# 	li		$v0,	1				# syscall_4: print string
-# 	syscall
-
-# 	la		$a0,		space
-# 	li		$v0,		4				# syscall_4: print string
-# 	syscall
-
-# 	move	$a0,	$t2
-# 	li		$v0,	1				# syscall_4: print string
-# 	syscall
-
-# 	jr		$ra				# jump to ra, allows register jumps from branch instructions
-# 	nop
-
-	li		$a3,	1
+	li		$t1,	1
 list_nums:
-	addi	$a3,	$a3,	1
 
-	move	$a0,	$a3
+	addi	$t1,	$t1,	1
+
+	move 	$a3,	$t1
+	jal		sum_divs		# find s(n) (ristricted divisor function)
+	nop
+
+	move	$t2,	$v1		# put s(n) in t2 and print
+
+	li	$t0,	1						# if s(n) = 1 go on to the next n
+	beq	$t2, $t0, list_nums
+	nop
+
+	move 	$a3,	$t2
+	jal		sum_divs		# find s(s(n)) = s(t2)
+	nop
+	
+	move	$t3,	$v1		# put s(n) in t2 and print
+
+	bne		$t1, $t3, list_nums	# if $t0 != $t1 then target
+	beq		$t1, $t2, list_nums
+
+	move	$a0,	$t1		# print n
 	li		$v0,	1
+	syscall
+
+	la		$a0,		space
+	li		$v0,		4
+	syscall
+
+	move 	$a0,	$t2
+	li		$v0,		1
 	syscall
 
 	la		$a0,		space
 	li		$v0,		4				# syscall_4: print string
 	syscall
 
-	jal		sum_divs
-	nop
-
-	move 	$a0,	$v1
+	move 	$a0,	$t3
 	li		$v0,		1
 	syscall
+
+	la		$a0,		amicable
+	li		$v0,		4				# syscall_4: print string
+	syscall
+
+	# if s(n) = 1 do nothing here
+	# if s(n) != 1, find s(s(n))
+	# if s(s(n)) = n mark as amicable
 
 	la		$a0,		nl
 	li		$v0,		4				# syscall_4: print string
 	syscall
 
+new_line:
 	j	list_nums
 	nop
-
-
-
-
-jal		sum_divs				# jump to sum_divs and save position to $ra
-nop
-
-move	$a0,	$v1
-li		$v0,	1
-syscall
-
-j		end				# jump to end
 
 #--------------------------------------------------------------------
 # sum_divs subroutine: input $a3, sums all proper devisors of input
@@ -127,16 +120,16 @@ sum_divs:
 	li		$t7,	1
 
 check_sum_divs:
-	addi	$t8, $t8, 1			# 8 = $t1 + 0
-	div		$t9, $t8			# t9 / t8
-	mfhi	$t6					# $t6 = 9 mod $t1 
-	mflo	$t5					# $t5 = floor(9 / $t1) 
+	addi	$t8, $t8, 1
+	div		$t9, $t8
+	mfhi	$t6
+	mflo	$t5
 	bne		$t6, $0, check_sum_divs
 	nop
 	blt		$t5, $t8, sum_out	# if $t5 < $t8 then check_sum_divs
 	nop
-	add		$t7, $t7, $t8		# $t0 = $t1 + $t5
-	beq		$t5, $t8, check_sum_divs	# if 2 == $t1 then target
+	add		$t7, $t7, $t8
+	beq		$t5, $t8, check_sum_divs
 	nop
 	add		$t7, $t7, $t5
 	j		check_sum_divs				# jump to target
