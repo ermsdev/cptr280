@@ -139,8 +139,6 @@ check_sum_divs:
 
 sum_out:
 	move	$v1,	$t7
-	# j		end
-	# nop
 	jr		$ra				# jump to ra, allows register jumps from branch instructions
 	nop
 #--------------------------------------------------------------------
