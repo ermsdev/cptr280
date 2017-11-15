@@ -17,7 +17,7 @@
 
 .data
 	prompt:     .asciiz     "Enter a positive integer to find its factorial: " 
-	bye:        .asciiz     "Program Ended"
+	bye:        .asciiz     "\nProgram Ended"
 
 .text
 .globl main
@@ -27,13 +27,25 @@
 		syscall
 		li		$v0,	5				# syscall_5: read int
 		syscall
-		move	$s0,	$v0
-		blt		$s0,	$0,		end		# end if user enters negative number
+		move	$a0,	$v0
+		blt		$a0,	$0,		end		# end if user enters negative number
 		nop
 
-		move	$a0,	$s0
+		li		$a0,	4
 		jal		factorial
 		nop
+
+	end:
+		move	$a0,	$v0
+		li		$v0,	1				# syscall_4: print string
+		syscall
+
+		la		$a0,	bye
+		li		$v0,	4				# syscall_4: print string
+		syscall
+
+		li		$v0,	10				# syscall_10: terminate program
+		syscall
 
 	factorial:
 		addi	$sp,	$sp, -12	# adjust stack for 3 items
@@ -56,19 +68,13 @@
 		jal 	factorial
 		nop
 
-		lw		$a0,	0($sp)		# return from jal: restore argument n
-		lw		$ra,	4($sp)		# restore the return address
+									# return from jal: 
+		lw		$a0,	0($sp)		# restore argument n
+		lw		$fp,	4($sp)		# restore the frame pointer
+		lw		$ra,	8($sp)		# restore the return address
 		addi	$sp,	$sp,	12	# adjust stack pointer to pop 3 items
 
 		mul		$v0,	$a0,	$v0	# return n * fact(n-1)
 
 		jr $ra						# return to the caller
 		nop
-
-	end:
-		la		$a0,		bye
-		li		$v0,		4				# syscall_4: print string
-		syscall
-
-		li		$v0,	10				# syscall_10: terminate program
-		syscall
