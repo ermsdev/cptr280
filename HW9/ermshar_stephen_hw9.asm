@@ -1,5 +1,5 @@
 # Stephen Ermshar
-# CPTR 280
+# CPTR 280: https://gab.wallawalla.edu/~curt.nelson/cptr280/index%202017.html
 # HW 9
 # 2017 NOV 17
 # version history: https://github.com/sermshar/cptr280
@@ -7,21 +7,21 @@
 # PROMPT:
 # Write a program to compute factorial(n). You must use stack frames as discussed in class and your program must be recursive in nature.
 
-# C++ code:
-# fact_recur(int n) {
-#     if (n == 0 || n == 1)
-#         return 1;
-#     else
-#         return n * fact_recur(n - 1);
-# }
+# factorial(int n)
+# 	if (n<=1)
+# 		return 1
+# 	else
+# 		return n * factorial(n - 1)
 
 .data
-	prompt:     .asciiz     "Enter a positive integer to find its factorial: " 
-	bye:        .asciiz     "\nProgram Ended"
+	prompt:		.asciiz		"Enter a positive integer to find its factorial (or a negative integer to quit): " 
+	bye:		.asciiz		"\nProgram Ended"
+	nl:			.asciiz		"\n"
 
 .text
 .globl main
 	main:
+	begin:
 		la		$a0,	prompt
 		li		$v0,	4				# syscall_4: print string
 		syscall
@@ -31,20 +31,26 @@
 		blt		$a0,	$0,		end		# end if user enters negative number
 		nop
 
-		li		$a0,	4
+		# li		$a0,	4
 		jal		factorial
 		nop
 
-	end:
 		move	$a0,	$v0
-		li		$v0,	1				# syscall_4: print string
+		li		$v0,	1			# syscall_4: print string
 		syscall
 
-		la		$a0,	bye
+		la		$a0,	nl
 		li		$v0,	4				# syscall_4: print string
 		syscall
 
-		li		$v0,	10				# syscall_10: terminate program
+		j begin
+
+	end:
+		la		$a0,	bye
+		li		$v0,	4			# syscall_4: print string
+		syscall
+
+		li		$v0,	10			# syscall_10: terminate program
 		syscall
 
 	factorial:
@@ -74,7 +80,7 @@
 		lw		$ra,	8($sp)		# restore the return address
 		addi	$sp,	$sp,	12	# adjust stack pointer to pop 3 items
 
-		mul		$v0,	$a0,	$v0	# return n * fact(n-1)
+		mul		$v0,	$a0,	$v0	# return n * factorial(n-1)
 
 		jr $ra						# return to the caller
 		nop
