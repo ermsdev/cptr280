@@ -10,7 +10,7 @@
 # TODO: try pre-sorting these and using a binary search
 # NOTE: many instructions share a common initial 6 bits, like sycall and sll (000000) and differ in the last 6 bits.
     opc:        .byte   0x20, 0x21, 0x08, 0x09, 0x24, 0x0C, 0x1A, 0x1B, 0x18, 0x19, 0x27, 0x25, 0x0D, 0x00, 0x04, 0x03, 0x07, 0x02, 0x06, 0x22, 0x23, 0x26, 0x0E, 0x19, 0x18, 0x2A, 0x29, 0x0A, 0x09, 0x04, 0x07, 0x06, 0x05, 0x02, 0x03, 0x09, 0x08, 0x20, 0x24, 0x21, 0x25, 0x23, 0x28, 0x29, 0x2B, 0x10, 0x12, 0x11, 0x13, 0x1A
-    opc_txt:    .asciiz "add    ", "addu   ", "addi   ", "addiu  ", "and    ", "andi   ", "div    ", "divu   ", "mult   ", "multu  ", "nor    ", "or     ", "ori    ", "sll    ", "sllv   ", "sra   ", "srav   ", "srl    ", "srlv   ", "sub    ", "subu   ", "xor    ", "xori   ", "lhi    ", "llo    ", "slt    ", "sltu    ", "slti    ", "sltiu  ", "beq    ", "bgtz   ", "blez   ", "bne    ", "j      ", "jal    ", "jalr   ", "jr     ", "lb     ", "lbu    ", "lh     ", "lhu    ", "lw     ", "sb     ", "sh     ", "sw     ", "mfhi   ", "mflo   ", "mthi   ", "mtlo   ", "trap   "
+    opc_txt:    .asciiz "add     ", "addi    ", "addiu   ", "addu    ", "and     ", "andi    ", "lui     ", "nor     ", "or      ", "ori     ", "slt     ", "slti    ", "sltiu   ", "sltu    ", "sub     ", "subu    ", "xor     ", "xori    ", "sll     ", "sllv    ", "sra     ", "srav    ", "srl     ", "srlv    ", "div     ", "divu    ", "mfhi    ", "mflo    ", "mthi    ", "mtlo    ", "mult    ", "multu   ", "beq     ", "bgez    ", "bgezal  ", "bgtz    ", "blez    ", "bltz    ", "bltzal  ", "bne     ", "break   ", "j       ", "jal     ", "jalr    ", "jr      ", "mfc0    ", "mtc0    ", "syscall ", "lb      ", "lbu     ", "lh      ", "lbu     ", "lw      ", "sb      ", "sh      ", "sw      "
 
     prompt:     .asciiz "enter the integer decimal representation of an opcode: "
     scs:    .asciiz "success"
@@ -34,8 +34,9 @@
     search:
         add		$s4, $s3, $s1       # add the offset and base address of opcode bitpatterns
         # $s4 is now the address of the current bitpattern
-        lb      $s5,    0($s4)
-        # $s5 is now the current bitpattern
+        lw      $s5,    0($s4)
+        # $s5 is now the current instruction bitpattern
+        sll     $t0,    $s5,    26  # get the first 6 bits
         beq		$s5, $s0, found     # if the input and the current bitpattern are the same, branch to found
         nop
         # bne     $s3, $s0, n_found
