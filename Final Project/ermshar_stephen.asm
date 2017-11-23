@@ -13,8 +13,8 @@
     opc_txt:    .asciiz "add    ", "addu   ", "addi   ", "addiu  ", "and    ", "andi   ", "div    ", "divu   ", "mult   ", "multu  ", "nor    ", "or     ", "ori    ", "sll    ", "sllv   ", "sra   ", "srav   ", "srl    ", "srlv   ", "sub    ", "subu   ", "xor    ", "xori   ", "lhi    ", "llo    ", "slt    ", "sltu    ", "slti    ", "sltiu  ", "beq    ", "bgtz   ", "blez   ", "bne    ", "j      ", "jal    ", "jalr   ", "jr     ", "lb     ", "lbu    ", "lh     ", "lhu    ", "lw     ", "sb     ", "sh     ", "sw     ", "mfhi   ", "mflo   ", "mthi   ", "mtlo   ", "trap   "
 
     prompt:     .asciiz "enter the integer decimal representation of an opcode: "
-    prompt2:    .asciiz "success"
-    prompt3:    .asciiz "fail"
+    scs:    .asciiz "success"
+    fail:    .asciiz "fail"
 .text
     main:
         la		$a0,	prompt
@@ -56,7 +56,7 @@
         nop
 
     n_found:
-        la		$a0,	prompt3
+        la		$a0,	fail
         li		$v0,	4				# syscall_4: print string
         syscall
         j end
