@@ -8,6 +8,12 @@ opc_txt:
 
 # each opcode text has 7 characters, plus the null termination character from using .asciiz, for a total of 8 bytes each, so as to keep them predictably aligned
 
+non_dup_opc:
+0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x20, 0x21, 0x23, 0x24, 0x25, 0x28, 0x29, 0x2B
+non_dup_opc_txt:
+"j      ", "jal    ", "beq    ", "bne    ", "blez   ", "bgtz   ", "addi   ", "addiu ", "slti   ", "sltiu  ", "andi   ", "ori    ", "xori   ", "lui    ", "lb     ", "lh     ", "lw     ", "lbu    ", "lbu    ", "sb     ", "sh     ", "sw     "
+
+
 
 
 # INCORRECT OPCODES:
