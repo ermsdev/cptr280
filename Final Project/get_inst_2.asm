@@ -8,8 +8,7 @@
 	# https://opencores.org/project,plasma,opcodes
 	# used a spreadsheet and textwrangler to turn the table in the link into these two lines
 	# NOTE: many instructions share a common initial 6 bits, like sycall and sll (000000) and differ in the last bits.
-    opc:        .byte   0x00, 0x08, 0x09, 0x00, 0x00, 0x0C, 0x0F, 0x00, 0x00, 0x0D, 0x00, 0x0A, 0x0B, 0x00, 0x00, 0x00, 0x00, 0x0E, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x01, 0x01, 0x07, 0x06, 0x01, 0x01, 0x05, 0x00, 0x02, 0x03, 0x00, 0x00, 0x10, 0x10, 0x00, 0x20, 0x24, 0x21, 0x25, 0x23, 0x28, 0x29, 0x2B
-    opc_txt:    .asciiz "add (0)", "addi   ", "addiu  ", "addu   ", "and    ", "andi   ", "lui    ", "nor    ", "or     ", "ori    ", "slt    ", "slti   ", "sltiu  ", "sltu   ", "sub    ", "subu   ", "xor    ", "xori   ", "sll    ", "sllv   ", "sra    ", "srav   ", "srl    ", "srlv   ", "div    ", "divu   ", "mfhi   ", "mflo   ", "mthi   ", "mtlo   ", "mult   ", "multu  ", "beq    ", "bgez   ", "bgezal ", "bgtz   ", "blez   ", "bltz   ", "bltzal ", "bne    ", "break  ", "j      ", "jal    ", "jalr   ", "jr     ", "mfc0   ", "mtc0   ", "syscall", "lb     ", "lbu    ", "lh     ", "lbu    ", "lw     ", "sb     ", "sh     ", "sw     "
+    
 
 	nl:		.asciiz		"\n"
 .text
@@ -45,6 +44,8 @@
 
 ### PRINT OPC : 
 	print_opc:
+		addi	$sp,	$sp,	-4
+		sw 		$ra,	0($sp)
 		# cases to be handled:
 		#	duplicate initial 6 bits
 		#		instruction types
@@ -60,11 +61,26 @@
 		# branch depending on case
 		# return ascii value address
 
+		li		$a0,	0
+		li		$a1,	5	# 0 - 5 are first 6 bits of the register
+		jal		splice_bits
+		nop
+
+		lw		$ra,	0($sp)
+		addi	$sp,	$sp,	4
+		jr		$ra
+		nop
 ### ------
 
-### GET OPC : 
-	get_opc:
-
+### SPLICE BITS : returns bits a0 to a1 (0 index) of the current instruction to t0 as the least significant bits of the register
+	splice_bits:
+		sllv	$t0,	$s1,	$a0
+		li		$t1,	31
+		sub		$a1,	$t1,	$a1
+		add		$a1,	$a1,	$a0
+		srlv	$t0,	$t0,	$a1
+		jr		$ra					# jump to $ra
+		nop
 ### ------
 
 ### CHECK IF LAST : checks if the current instruction is the last one, if it is it sets s7 to 1, otherwise it returns without changing anythin
