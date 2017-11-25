@@ -5,6 +5,12 @@
 # version history: https://github.com/sermshar/cptr280
 
 .data
+	# https://opencores.org/project,plasma,opcodes
+	# used a spreadsheet and textwrangler to turn the table in the link into these two lines
+	# NOTE: many instructions share a common initial 6 bits, like sycall and sll (000000) and differ in the last bits.
+    opc:        .byte   0x00, 0x08, 0x09, 0x00, 0x00, 0x0C, 0x0F, 0x00, 0x00, 0x0D, 0x00, 0x0A, 0x0B, 0x00, 0x00, 0x00, 0x00, 0x0E, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x01, 0x01, 0x07, 0x06, 0x01, 0x01, 0x05, 0x00, 0x02, 0x03, 0x00, 0x00, 0x10, 0x10, 0x00, 0x20, 0x24, 0x21, 0x25, 0x23, 0x28, 0x29, 0x2B
+    opc_txt:    .asciiz "add (0)", "addi   ", "addiu  ", "addu   ", "and    ", "andi   ", "lui    ", "nor    ", "or     ", "ori    ", "slt    ", "slti   ", "sltiu  ", "sltu   ", "sub    ", "subu   ", "xor    ", "xori   ", "sll    ", "sllv   ", "sra    ", "srav   ", "srl    ", "srlv   ", "div    ", "divu   ", "mfhi   ", "mflo   ", "mthi   ", "mtlo   ", "mult   ", "multu  ", "beq    ", "bgez   ", "bgezal ", "bgtz   ", "blez   ", "bltz   ", "bltzal ", "bne    ", "break  ", "j      ", "jal    ", "jalr   ", "jr     ", "mfc0   ", "mtc0   ", "syscall", "lb     ", "lbu    ", "lh     ", "lbu    ", "lw     ", "sb     ", "sh     ", "sw     "
+
 	nl:		.asciiz		"\n"
 .text
 	main:
@@ -12,20 +18,41 @@
 
 ### MAIN LOOP
 	main_loop:
-		jal		get_inst				# get the instruction
+		jal		get_inst					# get the instruction
 		nop
 
-		jal check_if_last
+		jal 	check_if_last				# check if it's the last instruction, print it and quit if it is
 		nop
 
-		jal		print_hex_inst				# print the instruction (integer)
+		jal		print_hex_inst				# print the instruction (hex integer)
 		nop
 
+		# jal		print_opc
+		nop
+
+		la		$a0,	nl
+		li		$v0,	4				# syscall_4: print string newline
+		syscall
 
 		addi	$s0,	$s0,	4		# go to next instruction
-
 		j main_loop						# loop again
 		nop
+### ------
+
+### PRINT OPC : 
+	print_opc:
+		# cases to be handled:
+		#	duplicate initial 6 bits
+		#		instruction types
+		#			R, I, J
+		# how they will be handled
+		#	6 bit duplicates:
+		#		0x00 : check last 6 bits for function code
+		#		0x01 : check 5 bits in 3rd field
+		#		0x10 : check 5 bits in 2nd field
+		#		all other 6 bits opcodes are non-duplicates and can be checked directly
+
+
 ### ------
 
 ## CHECK IF LAST : checks if the current instruction is the last one, if it is it prints it and jumps to end
@@ -55,10 +82,6 @@
 	print_hex_inst:
 		move	$a0,	$s1				# move instruction to be printed
 		li		$v0,	34				# syscall_1: print int
-		syscall
-
-		la		$a0,	nl
-		li		$v0,	4				# syscall_4: print string
 		syscall
 
 		jr		$ra						# jump to $ra
