@@ -823,7 +823,6 @@
 
 ### END
 	end:
-		sll		$t0,	$t0,	5
 		li		$v0,	10
 		syscall
 ### ------
