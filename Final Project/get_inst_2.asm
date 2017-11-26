@@ -28,6 +28,7 @@
 	the_nop: 	.asciiz		"nop    "
 	dollar:		.asciiz		"\t$"
 	comma:		.asciiz		","
+	hex:		.asciiz		"\t0x"
 .text
 	main:
 		la		$s0,	0x00400000		# start with the first instruction
@@ -115,7 +116,7 @@
 		li		$v0,	4				# syscall_4: print string
 		syscall
 
-		jal print_r
+		jal print_r_type
 		nop
 
 		lw		$ra,	0($sp)
@@ -124,12 +125,32 @@
 		nop
 ### ------
 
-### PRINT_R : print the rest of the instruction, for R types
-	print_r:
+### PRINT_R_TYPE : print the rest of the instruction, for R types
+	print_r_type:
 		addi	$sp,	$sp,	-4
 		sw 		$ra,	0($sp)
 
-		# splice (first register to be printed is the third field ie. 16-20)
+		jal	d_reg
+		nop
+		jal	s_reg
+		nop
+		jal	t_reg
+		nop
+		jal	shift_field
+		nop
+
+		lw		$ra,	0($sp)
+		addi	$sp,	$sp,	4
+		jr		$ra
+		nop
+### ------
+
+###	D REG : print the register in the third field of the instruction
+	d_reg:	# I don't need a name for this part, but I named the others and want it to be consistent
+		addi	$sp,	$sp,	-8
+		sw 		$ra,	0($sp)
+		sw		$t0,	4($sp)
+		# splice (third field ie. 16-20)
 		li		$a0,	16
 		li		$a1,	20
 		jal		splice_bits	# splice result stored in $t0
@@ -147,8 +168,19 @@
 		li		$v0,	4				# syscall_4: print string
 		syscall
 
+		lw		$t0,	-4($sp)
+		lw		$ra,	0($sp)
+		addi	$sp,	$sp,	8
+		jr		$ra
+		nop
+### ------
+
+### S REG : print the register in the first field of the instruction
 	s_reg:
-		# splice (second register to be printed is the first field ie. 6-10)
+		addi	$sp,	$sp,	-8
+		sw 		$ra,	0($sp)
+		sw		$t0,	4($sp)
+		# splice (first field ie. 6-10)
 		li		$a0,	6
 		li		$a1,	10
 		jal		splice_bits	# splice result stored in $t0
@@ -166,7 +198,18 @@
 		li		$v0,	4				# syscall_4: print string
 		syscall
 
+		lw		$t0,	-4($sp)
+		lw		$ra,	0($sp)
+		addi	$sp,	$sp,	8
+		jr		$ra
+		nop
+### ------
+
+### T REG : print the register in the second field of the instruction
 	t_reg:
+		addi	$sp,	$sp,	-8
+		sw 		$ra,	0($sp)
+		sw		$t0,	4($sp)
 		# splice (third register to be printed is the second field ie. 11-15)
 		li		$a0,	11
 		li		$a1,	15
@@ -184,14 +227,36 @@
 		la		$a0,	comma
 		li		$v0,	4				# syscall_4: print string
 		syscall
-		
 
-		# print dollar sign
-		# print integer of the splice UNLESS IT'S 0! (in that case don't do the other stuff either)
-		# print comma space
-
+		lw		$t0,	-4($sp)
 		lw		$ra,	0($sp)
-		addi	$sp,	$sp,	4
+		addi	$sp,	$sp,	8
+		jr		$ra
+		nop
+### ------
+
+### SHIFT FIELD : print the integer in the fourth field of the instruction
+	shift_field:
+		addi	$sp,	$sp,	-8
+		sw 		$ra,	0($sp)
+		sw		$t0,	4($sp)
+		# splice (fourth field ie. 21-25)
+		li		$a0,	21
+		li		$a1,	25
+		jal		splice_bits	# splice result stored in $t0
+		nop
+
+		la		$a0,	tb
+		li		$v0,	4				# syscall_4: print string
+		syscall
+
+		move	$a0,	$t0
+		li		$v0,	1				# syscall_1: print int
+		syscall
+
+		lw		$t0,	-4($sp)
+		lw		$ra,	0($sp)
+		addi	$sp,	$sp,	8
 		jr		$ra
 		nop
 ### ------
@@ -361,6 +426,7 @@
 
 ### END
 	end:
+		sll		$t0,	$t0,	5
 		li		$v0,	10
 		syscall
 ### ------
