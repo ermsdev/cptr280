@@ -24,6 +24,7 @@
 	not_dup_opc_txt:	.asciiz		"j      ", "jal    ", "beq    ", "bne    ", "blez   ", "bgtz   ", "addi   ", "addiu  ", "slti   ", "sltiu  ", "andi   ", "ori    ", "xori   ", "lui    ", "lb     ", "lh     ", "lw     ", "lbu    ", "lbu    ", "sb     ", "sh     ", "sw     "
 
 	nl:		.asciiz		"\n"
+	tb:		.asciiz		"\t"
 .text
 	main:
 		la		$s0,	0x00400000		# start with the first instruction
@@ -59,25 +60,13 @@
 	print_opc:
 		addi	$sp,	$sp,	-4
 		sw 		$ra,	0($sp)
-		# cases to be handled:
-		#	duplicate initial 6 bits
-		#		instruction types
-		#			R, I, J
-		# how they will be handled
-		#	6 bit duplicates:
-		#		0x00 : check last 6 bits for function code
-		#		0x01 : check 5 bits in 3rd field
-		#		0x10 : check 5 bits in 2nd field
-		#		all other 6 bits opcodes are non-duplicates and can be checked directly
-
-		# branch to splice_opc
-		# branch depending on case (check dup cases first, then check use whatever's remaining)
-		# return ascii value address
 
 		li		$a0,	0
 		li		$a1,	5	# 0 - 5 are first 6 bits of the register
 		jal		splice_bits	# splice result stored in $t0
 		nop
+
+		la		$ra,	print_opc_out		# instead of using a jal I'm setting $ra myself becuase I dont want any of these to return where they left off, but I also want to convert everything to proper jumps with links so I can use $sp more consistently 
 
 		beq		$t0,	$0,		dup_00_case		# if opcode is 0x00, then $t0 will be all 0, no need to create an immediate register
 		nop
@@ -104,6 +93,9 @@
 
 ### DUP 00 : handles cases where the opcode is 0x00
 	dup_00_case:
+		addi	$sp,	$sp,	-4
+		sw 		$ra,	0($sp)
+
 		# resplice to get the function code (last 6 bits)
 		li		$a0,	26
 		li		$a1,	31	# 26 - 31 are last 6 bits of the register
@@ -112,12 +104,21 @@
 
 		la		$t1,	dup_00_fnc
 		la		$t2,	dup_00_fnc_txt
-		j		search
+		# make search JAL after adding jr and stack stuff to each case
+		jal		search
+		nop
+
+		lw		$ra,	0($sp)
+		addi	$sp,	$sp,	4
+		jr		$ra
 		nop
 ### ------
 
 ### DUP 01 : handles cases where the opcode is 0x01
 	dup_01_case:
+		addi	$sp,	$sp,	-4
+		sw 		$ra,	0($sp)
+
 		# resplice to get the 5 bits in 3rd field
 		li		$a0,	11
 		li		$a1,	15	# 11 - 15 are 5 bits of the register
@@ -126,12 +127,21 @@
 
 		la		$t1,	dup_01
 		la		$t2,	dup_01_txt
-		j		search
+		jal		search
 		nop
+
+		lw		$ra,	0($sp)
+		addi	$sp,	$sp,	4
+		jr		$ra
+		nop
+
 ### ------
 
 ### DUP 10 : handles cases where the opcode is 0x10
 	dup_10_case:
+		addi	$sp,	$sp,	-4
+		sw 		$ra,	0($sp)
+
 		# resplice to get the 5 bits in 2nd field
 		li		$a0,	6
 		li		$a1,	10	# 6 - 10 are 5 bits of the register
@@ -140,12 +150,19 @@
 
 		la		$t1,	dup_10
 		la		$t2,	dup_10_txt
-		j		search
+		jal		search
+		nop
+
+		lw		$ra,	0($sp)
+		addi	$sp,	$sp,	4
+		jr		$ra
 		nop
 ### ------
 
 ### NOT DUP : handles cases where the opcode is unique
 	not_dup_case:
+		addi	$sp,	$sp,	-4
+		sw 		$ra,	0($sp)
 		# resplice to get first 6 bits in the opcode
 		# this is a repeat of a splice that was done earlier, but to reduce errors I'm sticking with this less efficient route. once i know it works I may refactor it so as to save the opcode splice instead of resplicing to get the unique opcode again
 		li		$a0,	0
@@ -155,7 +172,12 @@
 
 		la		$t1,	not_dup_opc
 		la		$t2,	not_dup_opc_txt
-		j		search
+		jal		search
+		nop
+
+		lw		$ra,	0($sp)
+		addi	$sp,	$sp,	4
+		jr		$ra
 		nop
 ### ------
 
@@ -177,10 +199,12 @@
 
 	search_found:
 		li		$t9,	8				# using t9 as an immediate register
-		mul		$t3,	$t3,	$t9		# multiply offset by 8, text opcodes are 8-byte-aligned, also its ok to clober the offset register becaue we're done searching through .data for the moment
+		# mul		$t3,	$t3,	$t9		# multiply offset by 8, text opcodes are 8-byte-aligned, also its ok to clober the offset register becaue we're done searching through .data for the moment
+		mult	$t3,	$t9
+		mflo	$t3
 		add		$a0,	$t3,	$t2		# add new offset and opcode string base address and put in a0 to be printed back in print_opc_out
 		
-		j print_opc_out
+		jr		$ra					# jump to $ra
 		nop
 ### ------
 
@@ -221,6 +245,10 @@
 	print_hex_inst:
 		move	$a0,	$s1				# move instruction to be printed
 		li		$v0,	34				# syscall_1: print int
+		syscall
+
+		la		$a0,	tb
+		li		$v0,	4				# syscall_4: print_string
 		syscall
 
 		jr		$ra						# jump to $ra
