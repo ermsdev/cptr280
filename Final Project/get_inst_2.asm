@@ -13,15 +13,19 @@
 
 	dup_00_fnc:			.byte		0x1A, 0x1B, 0x11, 0x13, 0x18, 0x19, 0x08, 0x0C, 0x0D, 0x20, 0x21, 0x24, 0x27, 0x25, 0x2A, 0x2B, 0x22, 0x23, 0x26, 0x00, 0x04, 0x03, 0x07, 0x02, 0x06, 0x10, 0x12, 0x09
 	dup_00_fnc_txt:		.asciiz		"div    ", "divu   ", "mthi   ", "mtlo   ", "mult   ", "multu  ", "jr     ", "syscall", "break  ", "add    ", "addu   ", "and    ", "nor    ", "or     ", "slt    ", "sltu   ", "sub    ", "subu   ", "xor    ", "sll    ", "sllv   ", "sra    ", "srav   ", "srl    ", "srlv   ", "mfhi   ", "mflo   ", "jalr   "
+	dup_00_cases:		.byte		2, 2, 3, 3, 2, 2, 3, 10, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 4, 4, 3
 
 	dup_01:				.byte		0x01, 0x11, 0x00, 0x10
 	dup_01_txt:			.asciiz		"bgez   ", "bgezal ", "bltz   ", "bltzal "
+	dup_01_cases:		.byte		6, 6, 6, 6 
 
 	dup_10:				.byte		0x00, 0x04
 	dup_10_txt:			.asciiz		"mfc0   ", "mtc0   "
+	dup_10_cases:		.byte		7, 7
 
 	not_dup_opc:		.byte		0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x20, 0x21, 0x23, 0x24, 0x25, 0x28, 0x29, 0x2B
 	not_dup_opc_txt:	.asciiz		"j      ", "jal    ", "beq    ", "bne    ", "blez   ", "bgtz   ", "addi   ", "addiu  ", "slti   ", "sltiu  ", "andi   ", "ori    ", "xori   ", "lui    ", "lb     ", "lh     ", "lw     ", "lbu    ", "lbu    ", "sb     ", "sh     ", "sw     "
+	not_dup_cases:		.byte		8, 8, 9, 9, 6, 6, 9, 9, 9, 9, 9, 9, 9, 11, 12, 12, 12, 12, 12, 12, 12, 12
 
 	nl:			.asciiz		"\n"
 	tb:			.asciiz		"\t"
@@ -52,7 +56,7 @@
 		jal		print_opc
 		nop
 
-	was_nop:							# just like TSA Precheck, just for nop, because it's special like that
+	was_nop:							# kinda like TSA Precheck, just for nop, because it's special like that
 		la		$a0,	nl
 		li		$v0,	4				# syscall_4: print string newline
 		syscall
@@ -116,7 +120,8 @@
 		li		$v0,	4				# syscall_4: print string
 		syscall
 
-		jal print_r_type
+		la		$t7,	dup_00_cases	# base address for the register printing cases
+		jal print_regs
 		nop
 
 		lw		$ra,	0($sp)
@@ -125,10 +130,109 @@
 		nop
 ### ------
 
-### PRINT_R_TYPE : print the rest of the instruction, for R types
-	print_r_type:
+### DUP 01 : handles cases where the opcode is 0x01
+	dup_01_case:
 		addi	$sp,	$sp,	-4
 		sw 		$ra,	0($sp)
+
+		# resplice to get the 5 bits in 3rd field
+		li		$a0,	11
+		li		$a1,	15	# 11 - 15 are 5 bits of the register
+		jal		splice_bits	# splice result stored in $t0
+		nop
+
+		la		$t1,	dup_01
+		la		$t2,	dup_01_txt
+		jal		search
+		nop
+		li		$v0,	4				# syscall_4: print string
+		syscall
+		
+		la		$t7,	dup_01_cases	# base address for the register printing cases
+		jal print_regs
+		nop
+
+		lw		$ra,	0($sp)
+		addi	$sp,	$sp,	4
+		jr		$ra
+		nop
+
+### ------
+
+### DUP 10 : handles cases where the opcode is 0x10
+	dup_10_case:
+		addi	$sp,	$sp,	-4
+		sw 		$ra,	0($sp)
+
+		# resplice to get the 5 bits in 2nd field
+		li		$a0,	6
+		li		$a1,	10	# 6 - 10 are 5 bits of the register
+		jal		splice_bits	# splice result stored in $t0
+		nop
+
+		la		$t1,	dup_10
+		la		$t2,	dup_10_txt
+		jal		search
+		nop
+		li		$v0,	4				# syscall_4: print string
+		syscall
+
+		la		$t7,	dup_10_cases	# base address for the register printing cases
+		jal print_regs
+		nop
+
+		lw		$ra,	0($sp)
+		addi	$sp,	$sp,	4
+		jr		$ra
+		nop
+### ------
+
+### NOT DUP : handles cases where the opcode is unique
+	not_dup_case:
+		addi	$sp,	$sp,	-4
+		sw 		$ra,	0($sp)
+		# resplice to get first 6 bits in the opcode
+		# this is a repeat of a splice that was done earlier, but to reduce errors I'm sticking with this less efficient route. once i know it works I may refactor it so as to save the opcode splice instead of resplicing to get the unique opcode again
+		li		$a0,	0
+		li		$a1,	5	# 0 - 5 are first 6 bits of the register
+		jal		splice_bits	# splice result stored in $t0
+		nop
+
+		la		$t1,	not_dup_opc
+		la		$t2,	not_dup_opc_txt
+		jal		search
+		nop
+		li		$v0,	4				# syscall_4: print string
+		syscall
+
+		la		$t7,	not_dup_cases	# base address for the register printing cases
+		jal print_regs
+		nop
+
+		lw		$ra,	0($sp)
+		addi	$sp,	$sp,	4
+		jr		$ra
+		nop
+### ------
+
+### PRINT REGS : print the rest of the instruction, for R types
+	print_regs:
+		addi	$sp,	$sp,	-4
+		sw 		$ra,	0($sp)
+
+		# we need the base address of the relevant case list (t7)
+		# we need the current offset we used to find the opcode txt (t6)
+		# use t9 as an immediate register
+
+		add		$t7,	$t7,	$t6	# add the address and the offset to get the address of the case number
+		lb		$t6,	0($t7)		# load the case number into t6, it should be safe to clober t6 now that we've gotten the address from it, we wont be using the offset again for the current instruction
+
+		li		$t9,	0
+		beq		$t6,	$t9,	c_0
+		nop
+		j		print_regs_out
+		
+
 
 		jal	d_reg
 		nop
@@ -139,6 +243,7 @@
 		jal	shift_field
 		nop
 
+	print_regs_out:
 		lw		$ra,	0($sp)
 		addi	$sp,	$sp,	4
 		jr		$ra
@@ -261,78 +366,135 @@
 		nop
 ### ------
 
-### DUP 01 : handles cases where the opcode is 0x01
-	dup_01_case:
-		addi	$sp,	$sp,	-4
+### IMM FIELD : print the integer in the immediate field of the instruction
+	imm_field:
+		addi	$sp,	$sp,	-8
 		sw 		$ra,	0($sp)
-
-		# resplice to get the 5 bits in 3rd field
-		li		$a0,	11
-		li		$a1,	15	# 11 - 15 are 5 bits of the register
+		sw		$t0,	4($sp)
+		# splice (bits 16-31)
+		li		$a0,	16
+		li		$a1,	31
 		jal		splice_bits	# splice result stored in $t0
 		nop
 
-		la		$t1,	dup_01
-		la		$t2,	dup_01_txt
-		jal		search
-		nop
+		la		$a0,	tb
 		li		$v0,	4				# syscall_4: print string
 		syscall
 
+		move	$a0,	$t0
+		li		$v0,	1				# syscall_1: print int
+		syscall
+
+		lw		$t0,	-4($sp)
 		lw		$ra,	0($sp)
-		addi	$sp,	$sp,	4
+		addi	$sp,	$sp,	8
 		jr		$ra
 		nop
-
 ### ------
 
-### DUP 10 : handles cases where the opcode is 0x10
-	dup_10_case:
-		addi	$sp,	$sp,	-4
+### TARGET FIELD : print the integer in the target field of the instruction
+	target_field:
+		addi	$sp,	$sp,	-8
 		sw 		$ra,	0($sp)
-
-		# resplice to get the 5 bits in 2nd field
+		sw		$t0,	4($sp)
+		# splice (bits 6-31)
 		li		$a0,	6
-		li		$a1,	10	# 6 - 10 are 5 bits of the register
+		li		$a1,	31
 		jal		splice_bits	# splice result stored in $t0
 		nop
 
-		la		$t1,	dup_10
-		la		$t2,	dup_10_txt
-		jal		search
-		nop
+		la		$a0,	hex
 		li		$v0,	4				# syscall_4: print string
 		syscall
 
+		move	$a0,	$t0
+		li		$v0,	34				# syscall_34: print hex
+		syscall
+
+		lw		$t0,	-4($sp)
 		lw		$ra,	0($sp)
-		addi	$sp,	$sp,	4
+		addi	$sp,	$sp,	8
 		jr		$ra
 		nop
 ### ------
 
-### NOT DUP : handles cases where the opcode is unique
-	not_dup_case:
-		addi	$sp,	$sp,	-4
-		sw 		$ra,	0($sp)
-		# resplice to get first 6 bits in the opcode
-		# this is a repeat of a splice that was done earlier, but to reduce errors I'm sticking with this less efficient route. once i know it works I may refactor it so as to save the opcode splice instead of resplicing to get the unique opcode again
-		li		$a0,	0
-		li		$a1,	5	# 0 - 5 are first 6 bits of the register
-		jal		splice_bits	# splice result stored in $t0
+##########################
+
+# THE CASE SYSTEM : 
+	# Case Numbers:
+	# 0: rd, rs, rt
+	# 1: rt, rd, sa
+	# 2: rs, rt
+	# 3: rs
+	# 4: rd
+	# 5: rs, rd
+	# 6: rs, imm
+	# 7: rt, rd
+	# 8: target
+	# 9: rt, rs, imm
+	# 10: No fields
+	# 11: rt, imm
+	# 12: rt,imm(rs)
+
+### 0 : rd, rs, rt
+	c_0:
+		jal	d_reg
+		nop
+		j		print_regs_out
 		nop
 
-		la		$t1,	not_dup_opc
-		la		$t2,	not_dup_opc_txt
-		jal		search
-		nop
-		li		$v0,	4				# syscall_4: print string
-		syscall
-
-		lw		$ra,	0($sp)
-		addi	$sp,	$sp,	4
-		jr		$ra
-		nop
 ### ------
+
+### 1: rt, rd, sa
+	c_1:
+### ------
+
+### 2: rs, rt
+	c_2:
+### ------
+
+### 3: rs
+	c_3:
+### ------
+
+### 4: rd
+	c_4:
+### ------
+
+### 5: rs, rd
+	c_5:
+### ------
+
+### 6: rs, imm
+	c_6:
+### ------
+
+### 7: rt, rd
+	c_7:
+### ------
+
+### 8: target
+	c_8:
+### ------
+
+### 9: rt, rs, imm
+	c_9:
+### ------
+
+### 10: No fields
+	c_10:
+### ------
+
+### 11: rt, imm
+	c_11:
+### ------
+
+### 12: rt,imm(rs)
+	c_12:
+### ------
+
+
+##########################
 
 ### SEARCH : takes two base addresses ($t1 and $t2) and searches the first set for one that matches the current bitpattern splice ($t0), then returns the corresponding text
 	search:
@@ -351,8 +513,8 @@
 		nop
 
 	search_found:
+		move	$t6,	$t3				# saving the offset, because I just realized I'll need it later
 		li		$t9,	8				# using t9 as an immediate register
-		# mul		$t3,	$t3,	$t9		# multiply offset by 8, text opcodes are 8-byte-aligned, also its ok to clober the offset register becaue we're done searching through .data for the moment
 		mult	$t3,	$t9
 		mflo	$t3
 		add		$a0,	$t3,	$t2		# add new offset and opcode string base address and put in a0 to be printed back in print_opc_out NOT IN OPC_OUT, NEED TO CHANGE NAME
