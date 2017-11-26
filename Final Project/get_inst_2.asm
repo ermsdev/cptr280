@@ -30,9 +30,10 @@
 	nl:			.asciiz		"\n"
 	tb:			.asciiz		"\t"
 	the_nop: 	.asciiz		"nop    "
-	dollar:		.asciiz		"\t$"
+	dollar:		.asciiz		"$"
 	comma:		.asciiz		","
-	hex:		.asciiz		"\t0x"
+	l_paren:	.asciiz		"("
+	r_paren:	.asciiz		")"
 .text
 	main:
 		la		$s0,	0x00400000		# start with the first instruction
@@ -230,17 +231,53 @@
 		li		$t9,	0
 		beq		$t6,	$t9,	c_0
 		nop
-		j		print_regs_out
-		
 
+		li		$t9,	1
+		beq		$t6,	$t9,	c_1
+		nop
 
-		jal	d_reg
+		li		$t9,	2
+		beq		$t6,	$t9,	c_2
 		nop
-		jal	s_reg
+
+		li		$t9,	3
+		beq		$t6,	$t9,	c_3
 		nop
-		jal	t_reg
+
+		li		$t9,	4
+		beq		$t6,	$t9,	c_4
 		nop
-		jal	shift_field
+
+		li		$t9,	5
+		beq		$t6,	$t9,	c_5
+		nop
+
+		li		$t9,	6
+		beq		$t6,	$t9,	c_6
+		nop
+
+		li		$t9,	7
+		beq		$t6,	$t9,	c_7
+		nop
+
+		li		$t9,	8
+		beq		$t6,	$t9,	c_8
+		nop
+
+		li		$t9,	9
+		beq		$t6,	$t9,	c_9
+		nop
+
+		li		$t9,	10
+		beq		$t6,	$t9,	c_10
+		nop
+
+		li		$t9,	11
+		beq		$t6,	$t9,	c_11
+		nop
+
+		li		$t9,	12
+		beq		$t6,	$t9,	c_12
 		nop
 
 	print_regs_out:
@@ -251,7 +288,7 @@
 ### ------
 
 ###	D REG : print the register in the third field of the instruction
-	d_reg:	# I don't need a name for this part, but I named the others and want it to be consistent
+	d_reg:
 		addi	$sp,	$sp,	-8
 		sw 		$ra,	0($sp)
 		sw		$t0,	4($sp)
@@ -267,10 +304,6 @@
 
 		move	$a0,	$t0
 		li		$v0,	1				# syscall_1: print int
-		syscall
-
-		la		$a0,	comma
-		li		$v0,	4				# syscall_4: print string
 		syscall
 
 		lw		$t0,	-4($sp)
@@ -299,10 +332,6 @@
 		li		$v0,	1				# syscall_1: print int
 		syscall
 
-		la		$a0,	comma
-		li		$v0,	4				# syscall_4: print string
-		syscall
-
 		lw		$t0,	-4($sp)
 		lw		$ra,	0($sp)
 		addi	$sp,	$sp,	8
@@ -329,10 +358,6 @@
 		li		$v0,	1				# syscall_1: print int
 		syscall
 
-		la		$a0,	comma
-		li		$v0,	4				# syscall_4: print string
-		syscall
-
 		lw		$t0,	-4($sp)
 		lw		$ra,	0($sp)
 		addi	$sp,	$sp,	8
@@ -350,10 +375,6 @@
 		li		$a1,	25
 		jal		splice_bits	# splice result stored in $t0
 		nop
-
-		la		$a0,	tb
-		li		$v0,	4				# syscall_4: print string
-		syscall
 
 		move	$a0,	$t0
 		li		$v0,	1				# syscall_1: print int
@@ -377,10 +398,6 @@
 		jal		splice_bits	# splice result stored in $t0
 		nop
 
-		la		$a0,	tb
-		li		$v0,	4				# syscall_4: print string
-		syscall
-
 		move	$a0,	$t0
 		li		$v0,	1				# syscall_1: print int
 		syscall
@@ -402,10 +419,6 @@
 		li		$a1,	31
 		jal		splice_bits	# splice result stored in $t0
 		nop
-
-		la		$a0,	hex
-		li		$v0,	4				# syscall_4: print string
-		syscall
 
 		move	$a0,	$t0
 		li		$v0,	34				# syscall_34: print hex
@@ -438,6 +451,166 @@
 
 ### 0 : rd, rs, rt
 	c_0:
+		la		$a0,	tb
+		li		$v0,	4				# syscall_4: print string
+		syscall
+
+		jal	d_reg
+		nop
+
+		la		$a0,	comma
+		li		$v0,	4				# syscall_4: print string
+		syscall
+
+		la		$a0,	tb
+		li		$v0,	4				# syscall_4: print string
+		syscall
+		
+		jal	s_reg
+		nop
+
+		la		$a0,	comma
+		li		$v0,	4				# syscall_4: print string
+		syscall
+
+		la		$a0,	tb
+		li		$v0,	4				# syscall_4: print string
+		syscall
+
+		jal	t_reg
+		nop
+		j		print_regs_out
+		nop
+### ------
+
+### 1: rd, rt, sa
+	c_1:
+		la		$a0,	tb
+		li		$v0,	4				# syscall_4: print string
+		syscall
+
+		jal	d_reg
+		nop
+
+		la		$a0,	comma
+		li		$v0,	4				# syscall_4: print string
+		syscall
+
+		la		$a0,	tb
+		li		$v0,	4				# syscall_4: print string
+		syscall
+
+		jal	t_reg
+		nop
+
+		la		$a0,	comma
+		li		$v0,	4				# syscall_4: print string
+		syscall
+
+		la		$a0,	tb
+		li		$v0,	4				# syscall_4: print string
+		syscall
+
+		jal	shift_field
+		nop
+		j		print_regs_out
+		nop
+### ------
+
+### 2: rs, rt
+	c_2:
+		la		$a0,	tb
+		li		$v0,	4				# syscall_4: print string
+		syscall
+
+		jal	s_reg
+		nop
+
+		la		$a0,	comma
+		li		$v0,	4				# syscall_4: print string
+		syscall
+
+		la		$a0,	tb
+		li		$v0,	4				# syscall_4: print string
+		syscall
+
+		jal	t_reg
+		nop
+		j		print_regs_out
+		nop
+### ------
+
+### 3: rs
+	c_3:
+		la		$a0,	tb
+		li		$v0,	4				# syscall_4: print string
+		syscall
+
+		jal	s_reg
+		nop
+		j		print_regs_out
+		nop
+### ------
+
+### 4: rd
+	c_4:
+		la		$a0,	tb
+		li		$v0,	4				# syscall_4: print string
+		syscall
+
+		jal	d_reg
+		nop
+		j		print_regs_out
+		nop
+### ------
+
+### 5: rs, rd
+	c_5:
+
+	# I don't know where I got the idea that this case exists, I can't find it in my spreadsheet now... I'll leave this here in case I remember, I'm pretty sure I double checked the others so this shouldn't be indicative of a larger problem
+
+### ------
+
+### 6: rs, imm
+	c_6:
+		la		$a0,	tb
+		li		$v0,	4				# syscall_4: print string
+		syscall
+
+		jal s_reg
+		nop
+
+		la		$a0,	comma
+		li		$v0,	4				# syscall_4: print string
+		syscall
+
+		la		$a0,	tb
+		li		$v0,	4				# syscall_4: print string
+		syscall
+
+		jal imm_field
+		nop
+		j		print_regs_out
+		nop
+### ------
+
+### 7: rt, rd
+	c_7:
+		la		$a0,	tb
+		li		$v0,	4				# syscall_4: print string
+		syscall
+
+		jal	t_reg
+		nop
+
+		la		$a0,	comma
+		li		$v0,	4				# syscall_4: print string
+		syscall
+
+		la		$a0,	tb
+		li		$v0,	4				# syscall_4: print string
+		syscall
+
 		jal	d_reg
 		nop
 		j		print_regs_out
@@ -445,52 +618,114 @@
 
 ### ------
 
-### 1: rt, rd, sa
-	c_1:
-### ------
-
-### 2: rs, rt
-	c_2:
-### ------
-
-### 3: rs
-	c_3:
-### ------
-
-### 4: rd
-	c_4:
-### ------
-
-### 5: rs, rd
-	c_5:
-### ------
-
-### 6: rs, imm
-	c_6:
-### ------
-
-### 7: rt, rd
-	c_7:
-### ------
-
 ### 8: target
 	c_8:
+		la		$a0,	tb
+		li		$v0,	4				# syscall_4: print string
+		syscall
+
+		jal	target_field
+		nop
+		j		print_regs_out
+		nop
 ### ------
 
 ### 9: rt, rs, imm
 	c_9:
+		la		$a0,	tb
+		li		$v0,	4				# syscall_4: print string
+		syscall
+
+		jal	t_reg
+		nop
+
+		la		$a0,	comma
+		li		$v0,	4				# syscall_4: print string
+		syscall
+
+		la		$a0,	tb
+		li		$v0,	4				# syscall_4: print string
+		syscall
+
+		jal	s_reg
+		nop
+
+		la		$a0,	comma
+		li		$v0,	4				# syscall_4: print string
+		syscall
+
+		la		$a0,	tb
+		li		$v0,	4				# syscall_4: print string
+		syscall
+
+		jal	imm_field
+		nop
+		j		print_regs_out
+		nop
 ### ------
 
 ### 10: No fields
 	c_10:
+		j		print_regs_out
+		nop
 ### ------
 
 ### 11: rt, imm
 	c_11:
+		la		$a0,	tb
+		li		$v0,	4				# syscall_4: print string
+		syscall
+
+		jal	t_reg
+		nop
+
+		la		$a0,	comma
+		li		$v0,	4				# syscall_4: print string
+		syscall
+
+		la		$a0,	tb
+		li		$v0,	4				# syscall_4: print string
+		syscall
+
+		jal	imm_field
+		nop
+		j		print_regs_out
+		nop
 ### ------
 
 ### 12: rt,imm(rs)
 	c_12:
+		la		$a0,	tb
+		li		$v0,	4				# syscall_4: print string
+		syscall
+
+		jal	t_reg
+		nop
+
+		la		$a0,	comma
+		li		$v0,	4				# syscall_4: print string
+		syscall
+
+		la		$a0,	tb
+		li		$v0,	4				# syscall_4: print string
+		syscall
+
+		jal	imm_field
+		nop
+
+		la		$a0,	l_paren
+		li		$v0,	4				# syscall_4: print string
+		syscall
+
+		jal	s_reg
+		nop
+
+		la		$a0,	r_paren
+		li		$v0,	4				# syscall_4: print string
+		syscall
+
+		j		print_regs_out
+		nop
 ### ------
 
 
