@@ -26,6 +26,8 @@
 	nl:			.asciiz		"\n"
 	tb:			.asciiz		"\t"
 	the_nop: 	.asciiz		"nop    "
+	dollar:		.asciiz		"\t$"
+	comma:		.asciiz		","
 .text
 	main:
 		la		$s0,	0x00400000		# start with the first instruction
@@ -62,7 +64,7 @@
 ### ------
 
 ### PRINT OPC : 
-	print_opc:
+	print_opc:		# THIS DOESN'T DO THE PRINTING, IT JUST STARTS THE PROCESS OF PRINTING THE WHOLE INSTRUCTION, NEED TO CHANGE NAME, BUT NOT RIGHT NOW
 		addi	$sp,	$sp,	-4
 		sw 		$ra,	0($sp)
 
@@ -88,8 +90,6 @@
 		nop
 
 	print_opc_out:
-		li		$v0,	4				# syscall_4: print string
-		syscall
 		lw		$ra,	0($sp)
 		addi	$sp,	$sp,	4
 		jr		$ra
@@ -112,6 +112,83 @@
 		# make search JAL after adding jr and stack stuff to each case
 		jal		search
 		nop
+		li		$v0,	4				# syscall_4: print string
+		syscall
+
+		jal print_r
+		nop
+
+		lw		$ra,	0($sp)
+		addi	$sp,	$sp,	4
+		jr		$ra
+		nop
+### ------
+
+### PRINT_R : print the rest of the instruction, for R types
+	print_r:
+		addi	$sp,	$sp,	-4
+		sw 		$ra,	0($sp)
+
+		# splice (first register to be printed is the third field ie. 16-20)
+		li		$a0,	16
+		li		$a1,	20
+		jal		splice_bits	# splice result stored in $t0
+		nop
+
+		la		$a0,	dollar
+		li		$v0,	4				# syscall_4: print string
+		syscall
+
+		move	$a0,	$t0
+		li		$v0,	1				# syscall_1: print int
+		syscall
+
+		la		$a0,	comma
+		li		$v0,	4				# syscall_4: print string
+		syscall
+
+	s_reg:
+		# splice (second register to be printed is the first field ie. 6-10)
+		li		$a0,	6
+		li		$a1,	10
+		jal		splice_bits	# splice result stored in $t0
+		nop
+
+		la		$a0,	dollar
+		li		$v0,	4				# syscall_4: print string
+		syscall
+
+		move	$a0,	$t0
+		li		$v0,	1				# syscall_1: print int
+		syscall
+
+		la		$a0,	comma
+		li		$v0,	4				# syscall_4: print string
+		syscall
+
+	t_reg:
+		# splice (third register to be printed is the second field ie. 11-15)
+		li		$a0,	11
+		li		$a1,	15
+		jal		splice_bits	# splice result stored in $t0
+		nop
+
+		la		$a0,	dollar
+		li		$v0,	4				# syscall_4: print string
+		syscall
+
+		move	$a0,	$t0
+		li		$v0,	1				# syscall_1: print int
+		syscall
+
+		la		$a0,	comma
+		li		$v0,	4				# syscall_4: print string
+		syscall
+		
+
+		# print dollar sign
+		# print integer of the splice UNLESS IT'S 0! (in that case don't do the other stuff either)
+		# print comma space
 
 		lw		$ra,	0($sp)
 		addi	$sp,	$sp,	4
@@ -134,6 +211,8 @@
 		la		$t2,	dup_01_txt
 		jal		search
 		nop
+		li		$v0,	4				# syscall_4: print string
+		syscall
 
 		lw		$ra,	0($sp)
 		addi	$sp,	$sp,	4
@@ -157,6 +236,8 @@
 		la		$t2,	dup_10_txt
 		jal		search
 		nop
+		li		$v0,	4				# syscall_4: print string
+		syscall
 
 		lw		$ra,	0($sp)
 		addi	$sp,	$sp,	4
@@ -179,6 +260,8 @@
 		la		$t2,	not_dup_opc_txt
 		jal		search
 		nop
+		li		$v0,	4				# syscall_4: print string
+		syscall
 
 		lw		$ra,	0($sp)
 		addi	$sp,	$sp,	4
@@ -207,7 +290,7 @@
 		# mul		$t3,	$t3,	$t9		# multiply offset by 8, text opcodes are 8-byte-aligned, also its ok to clober the offset register becaue we're done searching through .data for the moment
 		mult	$t3,	$t9
 		mflo	$t3
-		add		$a0,	$t3,	$t2		# add new offset and opcode string base address and put in a0 to be printed back in print_opc_out
+		add		$a0,	$t3,	$t2		# add new offset and opcode string base address and put in a0 to be printed back in print_opc_out NOT IN OPC_OUT, NEED TO CHANGE NAME
 		
 		jr		$ra					# jump to $ra
 		nop
