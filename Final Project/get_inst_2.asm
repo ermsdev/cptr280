@@ -23,8 +23,9 @@
 	not_dup_opc:		.byte		0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x20, 0x21, 0x23, 0x24, 0x25, 0x28, 0x29, 0x2B
 	not_dup_opc_txt:	.asciiz		"j      ", "jal    ", "beq    ", "bne    ", "blez   ", "bgtz   ", "addi   ", "addiu  ", "slti   ", "sltiu  ", "andi   ", "ori    ", "xori   ", "lui    ", "lb     ", "lh     ", "lw     ", "lbu    ", "lbu    ", "sb     ", "sh     ", "sw     "
 
-	nl:		.asciiz		"\n"
-	tb:		.asciiz		"\t"
+	nl:			.asciiz		"\n"
+	tb:			.asciiz		"\t"
+	the_nop: 	.asciiz		"nop    "
 .text
 	main:
 		la		$s0,	0x00400000		# start with the first instruction
@@ -42,9 +43,13 @@
 		jal		print_hex_inst				# print the instruction (hex integer)
 		nop
 
+		jal		check_if_nop				# checks for the special case of nop, which confuses the system for sll
+		nop
+
 		jal		print_opc
 		nop
 
+	was_nop:							# just like TSA Precheck, just for nop, because it's special like that
 		la		$a0,	nl
 		li		$v0,	4				# syscall_4: print string newline
 		syscall
@@ -216,6 +221,22 @@
 		add		$a1,	$a1,	$a0
 		srlv	$t0,	$t0,	$a1
 		jr		$ra					# jump to $ra
+		nop
+### ------
+
+### CHECK IF NOP
+	check_if_nop:
+		bne		$s1,	$0,	not_nop
+
+		la		$a0,	the_nop
+		li		$v0,	4				# syscall_4: print string
+		syscall
+
+		j		was_nop				# jump to was_nop
+		nop
+
+	not_nop:
+		jr		$ra						# jump to $ra
 		nop
 ### ------
 
