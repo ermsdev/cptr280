@@ -1,0 +1,20 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1504\cocoasubrtf830
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\margl1440\margr1440\vieww10800\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 Stephen Ermshar\
+CPTR 280\
+Final Project\
+\
+most of the issues I ran into were a result of not organizing my program well. Once I'd gotten as far as listing the opcodes I realized that my lack of structure was snowballing, so I started over and used a lot more jump-and-links and used the stack somewhat.\
+\
+Another place I struggled with was organizing my table of opcodes, this was mostly just a problem in the beginning. I used a spreadsheet and a text editor with really good find and replace functions to get the opcodes and convert them into one line of text that I could paste into my .data section. Also, in listing out my opcodes in ascii I made them each 7 characters long (plus null termination), so that I could address them based on the offset of their corresponding opcode.\
+\
+Instead of using masking like in the example, which would probably have been faster, I used a double-shift method. Where I would load two argument registers with the desired beginning and end bits of a register that I wanted to grab. So if I wanted to grab the first 6 bits, I\'92d load in 0 and 5 to argument registers, and it would shift the register left 0 bits, and right 31-5+0 bits to the right. This was useful for grabbing arbitrary bits, though since there were only a handful of different sections of bits I\'92d need to grab, masking with an and operation would have been faster.\
+\
+In order to handle all the different formats of each line of assembly code I created 12 unique cases, to help tell the program where each register value, belonged in the assembly instruction. For instance, instructions with offsets would take the registers rs, rt, and offset, and print them as \'93opcode rt, offset(rs)\'94, while an immediate instruction would take the same fields and print it as \'93opcode rt, rs, imm\'94\
+\
+Most other issues were correcting small errors, such as handling special cases like nop and sll, or syscall.}
