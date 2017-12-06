@@ -216,7 +216,7 @@
 		nop
 ### ------
 
-### PRINT REGS : print the rest of the instruction, for R types
+### PRINT REGS : print the rest of the instruction
 	print_regs:
 		addi	$sp,	$sp,	-4
 		sw 		$ra,	0($sp)
