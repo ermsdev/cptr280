@@ -399,7 +399,7 @@
 		nop
 
 		move	$a0,	$t0
-		li		$v0,	1				# syscall_1: print int
+		li		$v0,	34				# syscall_1: print int
 		syscall
 
 		lw		$t0,	-4($sp)
